@@ -1,8 +1,10 @@
+
 var Module = (() => {
   var _scriptDir = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : undefined;
   
   return (
 function(moduleArg = {}) {
+
 // include: shell.js
 // The Module object: Our interface to the outside world. We import
 // and export values on it. There are various ways Module can be used:
@@ -25,7 +27,7 @@ Module['ready'] = new Promise((resolve, reject) => {
   readyPromiseResolve = resolve;
   readyPromiseReject = reject;
 });
-["_malloc","_free","getExceptionMessage","___get_exception_message","_encrypt","_fflush","onRuntimeInitialized"].forEach((prop) => {
+["_main","getExceptionMessage","___get_exception_message","_free","_encrypt","_fflush","onRuntimeInitialized"].forEach((prop) => {
   if (!Object.getOwnPropertyDescriptor(Module['ready'], prop)) {
     Object.defineProperty(Module['ready'], prop, {
       get: () => abort('You are getting ' + prop + ' on the Promise object, instead of the instance. Use .then() to get called back with the instance, see the MODULARIZE docs in src/settings.js'),
@@ -36,6 +38,7 @@ Module['ready'] = new Promise((resolve, reject) => {
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
+
 
 // Sometimes an existing Module object exists with properties
 // meant to overwrite the default module functionality. Here
@@ -78,6 +81,7 @@ var read_,
     setWindowTitle;
 
 if (ENVIRONMENT_IS_SHELL) {
+
   if ((typeof process == 'object' && typeof require === 'function') || typeof window == 'object' || typeof importScripts == 'function') throw new Error('not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)');
 
   if (typeof read != 'undefined') {
@@ -269,6 +273,7 @@ assert(!ENVIRONMENT_IS_NODE, "node environment detected but not enabled at build
 
 assert(!ENVIRONMENT_IS_SHELL, "shell environment detected but not enabled at build time.  Add 'shell' to `-sENVIRONMENT` to enable.");
 
+
 // end include: shell.js
 // include: preamble.js
 // === Preamble library stuff ===
@@ -315,6 +320,9 @@ function assert(condition, text) {
 
 // We used to include malloc/free by default in the past. Show a helpful error in
 // builds with assertions.
+function _malloc() {
+  abort("malloc() called but not included in the build - add '_malloc' to EXPORTED_FUNCTIONS");
+}
 
 // Memory management
 
@@ -439,6 +447,7 @@ function initRuntime() {
   runtimeInitialized = true;
 
   checkStackCookie();
+
   
   callRuntimeCallbacks(__ATINIT__);
 }
@@ -817,6 +826,7 @@ function createWasm() {
   // Also pthreads and wasm workers initialize the wasm instance through this
   // path.
   if (Module['instantiateWasm']) {
+
     try {
       return Module['instantiateWasm'](info, receiveInstance);
     } catch(e) {
@@ -952,6 +962,8 @@ function dbg(text) {
   function decrementExceptionRefcount(ptr) {
       ___cxa_decrement_exception_refcount(ptr);
     }
+
+  
   
   var withStackSave = (f) => {
       var stack = stackSave();
@@ -1052,6 +1064,7 @@ function dbg(text) {
       return getExceptionMessageCommon(ptr);
     }
   Module["getExceptionMessage"] = getExceptionMessage;
+
   
     /**
      * @param {number} ptr
@@ -1080,6 +1093,7 @@ function dbg(text) {
       assert(typeof ptr === 'number');
       return '0x' + ptr.toString(16).padStart(8, '0');
     };
+
   
     /**
      * @param {number} ptr
@@ -1114,6 +1128,7 @@ function dbg(text) {
     };
 
   var exceptionCaught =  [];
+  
   
   var uncaughtExceptionCount = 0;
   function ___cxa_begin_catch(ptr) {
@@ -1208,6 +1223,7 @@ function dbg(text) {
       throw exceptionLast;
     }
   
+  
   /** @suppress {duplicate } */
   function ___cxa_find_matching_catch() {
       // Here we use explicit calls to `from64`/`to64` rather then using the
@@ -1256,6 +1272,7 @@ function dbg(text) {
 
   var ___cxa_find_matching_catch_3 = ___cxa_find_matching_catch;
 
+
   var _abort = () => {
       abort('native code called abort()');
     };
@@ -1293,6 +1310,10 @@ function dbg(text) {
       return ((hi + 0x200000) >>> 0 < 0x400001 - !!lo) ? (lo >>> 0) + hi * 4294967296 : NaN;
     }
   
+  
+  
+  
+  
   var _fd_seek = (fd, offset_low, offset_high, whence, newOffset) => {
       return 70;
     };
@@ -1316,6 +1337,7 @@ function dbg(text) {
       if (printCharBuffers[1].length) printChar(1, 10);
       if (printCharBuffers[2].length) printChar(2, 10);
     };
+  
   
   var _fd_write = (fd, iov, iovcnt, pnum) => {
       // hack to support printf in SYSCALLS_REQUIRE_FILESYSTEM=0
@@ -1434,6 +1456,7 @@ function dbg(text) {
       return ret;
     };
   
+  
     /**
      * @param {string|null=} returnType
      * @param {Array=} argTypes
@@ -1460,6 +1483,7 @@ function dbg(text) {
   
       function convertReturnValue(ret) {
         if (returnType === 'string') {
+          
           return UTF8ToString(ret);
         }
         if (returnType === 'boolean') return Boolean(ret);
@@ -1522,8 +1546,6 @@ var _encrypt = Module["_encrypt"] = createExportWrapper("encrypt");
 var ___errno_location = createExportWrapper("__errno_location");
 /** @type {function(...*):?} */
 var _fflush = Module["_fflush"] = createExportWrapper("fflush");
-/** @type {function(...*):?} */
-var _malloc = Module["_malloc"] = createExportWrapper("malloc");
 /** @type {function(...*):?} */
 var _free = Module["_free"] = createExportWrapper("free");
 /** @type {function(...*):?} */
@@ -1652,6 +1674,7 @@ function invoke_viii(index,a1,a2,a3) {
     _setThrew(1, 0);
   }
 }
+
 
 // include: postamble.js
 // === Auto-generated postamble setup entry stuff ===
@@ -1941,6 +1964,8 @@ var unexportedSymbols = [
 ];
 unexportedSymbols.forEach(unexportedRuntimeSymbol);
 
+
+
 var calledRun;
 
 dependenciesFulfilled = function runCaller() {
@@ -1959,6 +1984,7 @@ function stackCheckInit() {
 }
 
 function run() {
+
   if (runDependencies > 0) {
     return;
   }
@@ -2044,7 +2070,9 @@ if (Module['preInit']) {
 
 run();
 
+
 // end include: postamble.js
+
 
   return moduleArg.ready
 }
@@ -2057,5 +2085,3 @@ else if (typeof define === 'function' && define['amd'])
   define([], function() { return Module; });
 else if (typeof exports === 'object')
   exports["Module"] = Module;
-
-export default Module

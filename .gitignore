@@ -23,6 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-wasm/build/*
+src/wasm/build/*
 *.wasm
 *.cmake

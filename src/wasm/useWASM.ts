@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 export interface BaseWASMModule {
   HEAPU8: Uint8Array;
+  _free: Function;
   _malloc: Function;
   ccall: Function;
 }
