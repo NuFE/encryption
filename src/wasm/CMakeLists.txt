@@ -4,7 +4,7 @@ project(wasm C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
-add_executable(wasm main.c aes.c)
+add_executable(wasm main.c aes.c des.c)
 
 # Set the output directory to "/Users/andyhu/project/5008Proj/public"
 set_target_properties(wasm PROPERTIES 

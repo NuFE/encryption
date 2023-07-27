@@ -1,16 +1,19 @@
 import { Button, FilePicker, Heading, Pane, Spinner, Text, toaster } from 'evergreen-ui';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import useWASM from '../wasm/useWASM';
+import Module from "../wasm/wasm";
 
 const FileEncryption = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [encryptedFile, setEncryptedFile] = useState<File | null>(null);
+  const [downloadUrl, setDownloadUrl] = useState<string | undefined>(undefined);
+  const module = useWASM(Module);
 
   const handleFileChange = (files: FileList | null) => {
     setFile(files ? files[0] : null);
   };
 
-  const handleEncrypt = async () => {
+  const handleEncrypt = useCallback(async () => {
     if (!file) {
       toaster.danger('Please select a file to encrypt');
       return;
@@ -18,15 +21,35 @@ const FileEncryption = () => {
 
     setIsLoading(true);
 
-    // Here you should call your file encryption logic.
-    // Since I don't have access to this logic, I'm just setting a delay to simulate processing.
+    let reader = new FileReader();
+    reader.onload = function (e) {
+      if (!module || !e.target?.result) {
+        console.error('module is null or file read failed');
+        return;
+      }
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+      let inputBytes = new Uint8Array(e.target.result as ArrayBuffer);
+      let paddingSize = 16 - (inputBytes.length % 16);
+      let paddedInput = new Uint8Array(inputBytes.length + paddingSize);
+      paddedInput.set(inputBytes);
+      paddedInput.fill(paddingSize, inputBytes.length);
+      let inputPtr = module._malloc(paddedInput.length);
+      module.HEAPU8.set(paddedInput, inputPtr);
+      module.ccall('encrypt', 'number', ['number', 'number'], [inputPtr, paddedInput.length]);
 
+      let encryptedBytes = new Uint8Array(module.HEAPU8.buffer, inputPtr, paddedInput.length);
+      
+      module._free(inputPtr);
+
+      const blob = new Blob([encryptedBytes], { type: "application/octet-stream" });
+      setDownloadUrl(URL.createObjectURL(blob));
+    };
+
+    reader.readAsArrayBuffer(file);
     setIsLoading(false);
-    setEncryptedFile(file);
     toaster.success('File encrypted successfully');
-  };
+
+  }, [file, module]);
 
   return (
     <Pane
@@ -56,12 +79,24 @@ const FileEncryption = () => {
         Encrypt File
       </Button>
 
-      {encryptedFile && (
-        <>
-          <Heading size={600} marginTop={48}>Encrypted File</Heading>
-          <Text size={500} marginTop={16}>{encryptedFile.name}</Text>
-        </>
+      {downloadUrl && (
+        <Pane
+          alignItems="center"
+          justifyContent="center"
+          display="flex"
+          flexDirection="column"
+          marginTop={48}
+        >
+          <a
+            href={downloadUrl}
+            download={`${file?.name}_encrypted`}
+            style={{ textDecoration: 'none' }}
+          >   <Text size={500} marginTop={16}>{file?.name}_encrypted</Text>
+          </a>
+
+        </Pane>
       )}
+
     </Pane>
   );
 };
