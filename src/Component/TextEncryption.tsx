@@ -1,53 +1,52 @@
-import { Heading, Pane, Paragraph, SelectField, Text, TextInputField } from 'evergreen-ui';
+import { Heading, Pane, Paragraph, Text, TextInputField } from 'evergreen-ui';
 import { ChangeEvent, useCallback, useState } from 'react';
+import useEncryption from '../hook';
 import useWASM from '../wasm/useWASM';
 import Module from "../wasm/wasm";
+import SelectEncryptionAlgorithm from './SelectEncryptionAlgorithm';
 
 const TextEncryption = () => {
   const [text, setText] = useState('');
   const [algorithm, setAlgorithm] = useState('aes');
   const [encryptedText, setEncryptedText] = useState('');
   const module = useWASM(Module);
-  const handleChangeText = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    if (!module) {
-      console.error('module is null');
-      return;
-    }
+  const { encrypt } = useEncryption(module, algorithm); // Use our new hook
+
+  const handleChangeText = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     setText(event.target.value);
 
     // Convert the input string to bytes (assuming UTF-8 encoding).
     let encoder = new TextEncoder();
     let inputBytes = encoder.encode(event.target.value);
-    // Determine how many bytes we need to add as padding.
-    let paddingSize = 16 - (inputBytes.length % 16);
-    // Create a new Uint8Array to hold the padded input.
-    let paddedInput = new Uint8Array(inputBytes.length + paddingSize);
-    // Copy the original input into the start of the new array.
-    paddedInput.set(inputBytes);
-    paddedInput.fill(paddingSize, inputBytes.length);
-    // Allocate space in the module's heap for the input and output data.
-    let inputPtr = module._malloc(paddedInput.length);
+    let encryptedBytes = await encrypt(inputBytes);
 
-    // Copy the input data to the module's heap.
-    module.HEAPU8.set(paddedInput, inputPtr);
+    // Convert the encrypted bytes to a hex string.
+    let encryptedText = Array.prototype.map.call(encryptedBytes, x => ('00' + x.toString(16)).slice(-2)).join('');
 
-    // Call the encryption function.
-    module.ccall('encrypt', 'number', ['number', 'number'], [inputPtr, paddedInput.length]);
-
-    // Create a new Uint8Array to hold the encrypted data.
-    let encryptedBytes = new Uint8Array(module.HEAPU8.buffer, inputPtr, paddedInput.length);
-
-    // Convert the encrypted bytes to a string (for displaying in the UI).
-    let encryptedText = new TextDecoder().decode(encryptedBytes);
     setEncryptedText(encryptedText);
+  }, [encrypt]);
 
-    // Free the memory we allocated.
-    module._free(inputPtr);
-  }, [module])
-
-  const handleChangeAlgorithm = (event: ChangeEvent<HTMLSelectElement>) => {
+  const handleChangeAlgorithm = useCallback(async (event: ChangeEvent<HTMLSelectElement>) => {
     setAlgorithm(event.target.value);
-  }
+
+    // If there's no text, there's no need to encrypt anything
+    if (text === '') {
+      setEncryptedText('');
+      return;
+    }
+
+    // If text exists, re-encrypt it with the new algorithm
+    let encoder = new TextEncoder();
+    let inputBytes = encoder.encode(text);
+
+    // Recreate the encryption function with the new algorithm
+    let encryptedBytes = await encrypt(inputBytes);
+
+    // Convert the encrypted bytes to a hex string.
+    let encryptedText = Array.prototype.map.call(encryptedBytes, x => ('00' + x.toString(16)).slice(-2)).join('');
+
+    setEncryptedText(encryptedText);
+  }, [encrypt]);
 
   return (
     <Pane
@@ -73,17 +72,7 @@ const TextEncryption = () => {
         marginBottom={20}
       />
 
-      <SelectField
-        width={500}
-        label="Encryption Algorithm"
-        value={algorithm}
-        onChange={handleChangeAlgorithm}
-        marginBottom={30}
-      >
-        <option value="aes">AES</option>
-        <option value="des">DES</option>
-        <option value="rsa">RSA</option>
-      </SelectField>
+      <SelectEncryptionAlgorithm value={algorithm} onChange={handleChangeAlgorithm} />
 
       <Text size={500}>Encrypted Text: {encryptedText}</Text>
     </Pane>

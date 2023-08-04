@@ -1,14 +1,20 @@
 import { Button, FilePicker, Heading, Pane, Spinner, Text, toaster } from 'evergreen-ui';
-import { useCallback, useState } from 'react';
+import { ChangeEvent, useCallback, useState } from 'react';
+import useEncryption from '../hook';
 import useWASM from '../wasm/useWASM';
 import Module from "../wasm/wasm";
+import SelectEncryptionAlgorithm from './SelectEncryptionAlgorithm';
 
 const FileEncryption = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | undefined>(undefined);
   const module = useWASM(Module);
-
+  const [algorithm, setAlgorithm] = useState('aes');
+  const { encrypt } = useEncryption(module, 'aes'); // Use our new hook, hardcoded to use AES encryption for now
+  const handleChangeAlgorithm = (event: ChangeEvent<HTMLSelectElement>) => {
+    setAlgorithm(event.target.value);
+  }
   const handleFileChange = (files: FileList | null) => {
     setFile(files ? files[0] : null);
   };
@@ -22,34 +28,23 @@ const FileEncryption = () => {
     setIsLoading(true);
 
     let reader = new FileReader();
-    reader.onload = function (e) {
-      if (!module || !e.target?.result) {
-        console.error('module is null or file read failed');
+    reader.onload = async function (e) {
+      if (!e.target?.result) {
+        console.error('file read failed');
         return;
       }
 
       let inputBytes = new Uint8Array(e.target.result as ArrayBuffer);
-      let paddingSize = 16 - (inputBytes.length % 16);
-      let paddedInput = new Uint8Array(inputBytes.length + paddingSize);
-      paddedInput.set(inputBytes);
-      paddedInput.fill(paddingSize, inputBytes.length);
-      let inputPtr = module._malloc(paddedInput.length);
-      module.HEAPU8.set(paddedInput, inputPtr);
-      module.ccall('encrypt', 'number', ['number', 'number'], [inputPtr, paddedInput.length]);
+      let encryptedBytes = await encrypt(inputBytes);
 
-      let encryptedBytes = new Uint8Array(module.HEAPU8.buffer, inputPtr, paddedInput.length);
-      
-      module._free(inputPtr);
-
-      const blob = new Blob([encryptedBytes], { type: "application/octet-stream" });
+      const blob = new Blob([encryptedBytes!], { type: "application/octet-stream" });
       setDownloadUrl(URL.createObjectURL(blob));
     };
 
     reader.readAsArrayBuffer(file);
     setIsLoading(false);
     toaster.success('File encrypted successfully');
-
-  }, [file, module]);
+  }, [file, encrypt]);
 
   return (
     <Pane
@@ -70,6 +65,7 @@ const FileEncryption = () => {
         placeholder="Select a file to encrypt..."
       />
 
+    <SelectEncryptionAlgorithm value={algorithm} onChange={handleChangeAlgorithm} />
       <Button
         iconBefore={isLoading ? Spinner : undefined}
         isLoading={isLoading}
@@ -91,7 +87,8 @@ const FileEncryption = () => {
             href={downloadUrl}
             download={`${file?.name}_encrypted`}
             style={{ textDecoration: 'none' }}
-          >   <Text size={500} marginTop={16}>{file?.name}_encrypted</Text>
+          >   
+            <Text size={500} marginTop={16}>{file?.name}_encrypted</Text>
           </a>
 
         </Pane>
