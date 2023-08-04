@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "postinstall": "node ./src/script/postInstall.cjs"
+    "preview": "vite preview"
   },
   "dependencies": {
     "evergreen-ui": "^7.1.9",
