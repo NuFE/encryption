@@ -24,5 +24,4 @@ dist-ssr
 *.sw?
 
 src/wasm/build/*
-*.wasm
 *.cmake
