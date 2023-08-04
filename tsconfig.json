@@ -21,6 +21,6 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"],
-  "exclude": ["wasm"],
+  "exclude": ["src/wasm"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
