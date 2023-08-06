@@ -7,6 +7,14 @@ body {
 button {
   font-family: 'Open Sans', sans-serif;
 }
+
+html,
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
 #root {
   margin: 0 auto;
   text-align: center;

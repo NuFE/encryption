@@ -73,8 +73,9 @@ const TextEncryption = () => {
       />
 
       <SelectEncryptionAlgorithm value={algorithm} onChange={handleChangeAlgorithm} />
-
-      <Text size={500}>Encrypted Text: {encryptedText}</Text>
+      <p style={{ whiteSpace: 'pre-line', wordWrap: 'anywhere', textOverflow: 'ellipsis', margin:"0 30px" }}>
+        <Text size={500}>Encrypted Text: {encryptedText}</Text>
+      </p>
     </Pane>
   );
 }

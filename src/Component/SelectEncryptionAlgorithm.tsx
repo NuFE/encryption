@@ -17,7 +17,6 @@ const SelectEncryptionAlgorithm: FC<SelectEncryptionAlgorithmProps> = ({ value, 
     >
       <option value="aes">AES</option>
       <option value="des">DES</option>
-      <option value="rsa">RSA</option>
     </SelectField>
   );
 }
