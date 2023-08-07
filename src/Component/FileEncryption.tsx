@@ -24,16 +24,15 @@ const FileEncryption = () => {
       toaster.danger('Please select a file to encrypt');
       return;
     }
-
+    setDownloadUrl(undefined);
     setIsLoading(true);
 
     let reader = new FileReader();
     reader.onload = async function (e) {
       if (!e.target?.result) {
-        console.error('file read failed');
+        toaster.danger('File not found');
         return;
       }
-
       let inputBytes = new Uint8Array(e.target.result as ArrayBuffer);
       let encryptedBytes = await encrypt(inputBytes);
 
@@ -42,8 +41,8 @@ const FileEncryption = () => {
       setIsLoading(false);
       toaster.success('File encrypted successfully');
     };
-    reader.onerror = async function (e) {
-      console.error('file read failed');
+    reader.onerror = async function () {
+      toaster.danger('File encryption failed');
       setIsLoading(false);
     }
     reader.readAsArrayBuffer(file);
