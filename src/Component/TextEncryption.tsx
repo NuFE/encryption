@@ -73,6 +73,7 @@ const TextEncryption = () => {
       />
 
       <SelectEncryptionAlgorithm value={algorithm} onChange={handleChangeAlgorithm} />
+      {/* @ts-ignore */}
       <p style={{ whiteSpace: 'pre-line', wordWrap: 'anywhere', textOverflow: 'ellipsis', margin:"0 30px" }}>
         <Text size={500}>Encrypted Text: {encryptedText}</Text>
       </p>

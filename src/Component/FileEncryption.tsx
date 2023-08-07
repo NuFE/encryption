@@ -39,11 +39,15 @@ const FileEncryption = () => {
 
       const blob = new Blob([encryptedBytes!], { type: "application/octet-stream" });
       setDownloadUrl(URL.createObjectURL(blob));
+      setIsLoading(false);
+      toaster.success('File encrypted successfully');
     };
-
+    reader.onerror = async function (e) {
+      console.error('file read failed');
+      setIsLoading(false);
+    }
     reader.readAsArrayBuffer(file);
-    setIsLoading(false);
-    toaster.success('File encrypted successfully');
+
   }, [file, encrypt]);
 
   return (
@@ -65,7 +69,7 @@ const FileEncryption = () => {
         placeholder="Select a file to encrypt..."
       />
 
-    <SelectEncryptionAlgorithm value={algorithm} onChange={handleChangeAlgorithm} />
+      <SelectEncryptionAlgorithm value={algorithm} onChange={handleChangeAlgorithm} />
       <Button
         iconBefore={isLoading ? Spinner : undefined}
         isLoading={isLoading}
@@ -87,7 +91,7 @@ const FileEncryption = () => {
             href={downloadUrl}
             download={`${file?.name}_encrypted`}
             style={{ textDecoration: 'none' }}
-          >   
+          >
             <Text size={500} marginTop={16}>{file?.name}_encrypted</Text>
           </a>
 
