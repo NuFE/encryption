@@ -1,8 +1,9 @@
-import { Button, FilePicker, Heading, Pane, Spinner, Text, toaster } from 'evergreen-ui';
+import { FilePicker, Heading, Pane, Text, toaster } from 'evergreen-ui';
 import { ChangeEvent, useCallback, useState } from 'react';
 import useEncryption from '../hook';
 import useWASM from '../wasm/useWASM';
 import Module from "../wasm/wasm";
+import { EncryptionBtn } from './EncryptionBtn/Button';
 import SelectEncryptionAlgorithm from './SelectEncryptionAlgorithm';
 
 const FileEncryption = () => {
@@ -69,14 +70,13 @@ const FileEncryption = () => {
       />
 
       <SelectEncryptionAlgorithm value={algorithm} onChange={handleChangeAlgorithm} />
-      <Button
-        iconBefore={isLoading ? Spinner : undefined}
-        isLoading={isLoading}
+      <EncryptionBtn
         disabled={!file}
         onClick={handleEncrypt}
+        isLoading={isLoading}
       >
         Encrypt File
-      </Button>
+      </EncryptionBtn>
 
       {downloadUrl && (
         <Pane
