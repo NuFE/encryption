@@ -3,6 +3,7 @@ import { ChangeEvent, useCallback, useState } from 'react';
 import useEncryption from '../hook';
 import useWASM from '../wasm/useWASM';
 import Module from "../wasm/wasm";
+import { Icon } from './Icon';
 import SelectEncryptionAlgorithm from './SelectEncryptionAlgorithm';
 
 const TextEncryption = () => {
@@ -58,6 +59,7 @@ const TextEncryption = () => {
       height="100vh"
       width="100vw"
     >
+      <Icon src="/glass.svg" />
       <Heading size={700} marginBottom={20}>Encrypt your text</Heading>
 
       <Paragraph marginBottom={30}>

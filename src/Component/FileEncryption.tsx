@@ -1,9 +1,10 @@
-import { FilePicker, Heading, Pane, Text, toaster } from 'evergreen-ui';
-import { ChangeEvent, useCallback, useState } from 'react';
+import { FilePicker, Heading, Pane, toaster } from 'evergreen-ui';
+import { ChangeEvent, useCallback, useRef, useState } from 'react';
 import useEncryption from '../hook';
 import useWASM from '../wasm/useWASM';
 import Module from "../wasm/wasm";
 import { EncryptionBtn } from './EncryptionBtn/Button';
+import { Icon } from './Icon';
 import SelectEncryptionAlgorithm from './SelectEncryptionAlgorithm';
 
 const FileEncryption = () => {
@@ -13,6 +14,7 @@ const FileEncryption = () => {
   const module = useWASM(Module);
   const [algorithm, setAlgorithm] = useState('aes');
   const { encrypt } = useEncryption(module, 'aes'); // Use our new hook, hardcoded to use AES encryption for now
+  const linkRef = useRef<HTMLAnchorElement>(null);
   const handleChangeAlgorithm = (event: ChangeEvent<HTMLSelectElement>) => {
     setAlgorithm(event.target.value);
   }
@@ -39,6 +41,10 @@ const FileEncryption = () => {
 
       const blob = new Blob([encryptedBytes!], { type: "application/octet-stream" });
       setDownloadUrl(URL.createObjectURL(blob));
+      if (linkRef.current){
+        linkRef.current.href = URL.createObjectURL(blob);
+        linkRef.current.click();
+      }
       setIsLoading(false);
       toaster.success('File encrypted successfully');
     };
@@ -60,6 +66,7 @@ const FileEncryption = () => {
       height="100vh"
       width="100vw"
     >
+      <Icon src="/div.svg" />
       <Heading size={700} marginBottom={20}>Encrypt your file</Heading>
 
       <FilePicker
@@ -70,33 +77,23 @@ const FileEncryption = () => {
       />
 
       <SelectEncryptionAlgorithm value={algorithm} onChange={handleChangeAlgorithm} />
-      <EncryptionBtn
-        disabled={!file}
-        onClick={handleEncrypt}
-        isLoading={isLoading}
-      >
-        Encrypt File
-      </EncryptionBtn>
 
-      {downloadUrl && (
         <Pane
           alignItems="center"
           justifyContent="center"
           display="flex"
-          flexDirection="column"
-          marginTop={48}
+          marginTop={10}
         >
-          <a
-            href={downloadUrl}
-            download={`${file?.name}_encrypted`}
-            style={{ textDecoration: 'none' }}
+          <EncryptionBtn
+            disabled={!file}
+            onClick={handleEncrypt}
+            isLoading={isLoading}
           >
-            <Text size={500} marginTop={16}>{file?.name}_encrypted</Text>
-          </a>
+            Encrypt File
+          </EncryptionBtn>
 
         </Pane>
-      )}
-
+      <a href='' download={file?.name} style={{ display: 'none'}} ref={linkRef}>{downloadUrl}</a>
     </Pane>
   );
 };
